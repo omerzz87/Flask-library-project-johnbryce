@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+
+<body>
+    
+</div>
+    <div class="logcontainer">
+            <div class="Pname"> The library </div>
+        Username<input id="username"><br>
+        Password<input id="password" type="password"><br>
+
+        <button onclick="login()">Login</button> Don't have an account? <button onclick="register()" style="background-color: yellow;">Register</button>
+        <br>
+        <div id="msg" style="font-size: 20px;"></div>
+    </div>
+
+</body>
+
+</html>
+
+<script>
+const MY_SERVER = 'http://127.0.0.1:5000';
+    document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const message = urlParams.get('msg');
+
+        if (message) {
+            document.getElementById('msg').textContent = message; 
+        }
+    });
+
+
+const register = () => {
+    window.location.href = "register.html";
+}
+
+
+const login = async () => {
+    try {
+        const res = await axios.post(`${MY_SERVER}`, { username: username.value, password: password.value }, {
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        sessionStorage.setItem("myname", res.data.name);
+        sessionStorage.setItem("access_token", res.data.access_token);
+
+
+        window.location.href = "LibraryDatabase.html";
+    } catch (error) {
+        msg.innerHTML=error.response.data.message;
+    }
+}
+</script>

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<nav class="navbar">
+    <div class="left-links">
+        <a href="LibraryDatabase.html">Library</a>
+        <a href="customers.html">Customers</a>
+    </div>
+    <div class="right-content">
+
+        <span id="welcomemsg"></span>
+        <button onclick="logout()" id="outbtn">Logout</button>
+    </div>
+</nav>
+
+
+
+<body>
+    <div id="Customerslist">
+        <h1 class="libtitles">Customers</h1>
+        <h2 id="customerCount"></h2>
+                <div class="msg2place">
+                    <h3 id="msg2"></h3></div></div>
+        <table id="customersTable">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Age</th>
+                    <th>City</th>
+                    <th>Book leasing</th>
+                    <th>Return until</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>   
+            </tbody>
+        </table>
+    
+
+    <script>
+        const MY_SERVER = "http://127.0.0.1:5000"
+
+
+const token = sessionStorage.getItem('access_token')
+        const fetchcustomers = async () => {
+            try {
+                const response = await axios.get(`${MY_SERVER}/getcustomers`);
+                const customers = response.data;
+                console.log("Customers data:", customers);
+                const tableBody = document.querySelector("#customersTable tbody");
+                let leasingCustomersCount = 0;
+                tableBody.innerHTML = "";
+                customers.forEach(customer => {
+                    customer.loans.forEach(loan => {
+                        const returnDate = new Date(loan.return_date);
+                        const formattedReturnDate = returnDate.getDate().toString().substr(-2) + '/' +
+                            ('0' + (returnDate.getMonth() + 1)).slice(-2) + '/' +
+                            ('0' + returnDate.getFullYear()).slice(-2);
+
+                        const book = loan.book;
+                        console.log("Book data:", book);
+                        const row = `
+                        <tr>
+                        <td>${customer.name}</td>
+                        <td>${customer.age}</td>
+                        <td>${customer.city}</td>
+                        <td>${book.title}</td>
+                        <td style="white-space: nowrap; width: 200px;">Not later than: ${formattedReturnDate}</td>
+                        <td><button onclick="returnBook(${loan.id})">Return book</button></td>
+                        </tr>
+
+                        `;
+                        tableBody.innerHTML += row;
+                        leasingCustomersCount++;
+                    });
+                })
+                const customerCount = document.querySelector("#customerCount");
+                customerCount.textContent = `Customers due to return their books: ${leasingCustomersCount}`;
+            } catch (error) {
+                console.error("Failed to fetch customers:", error);
+                document.querySelector("#msg2").textContent = "Failed to fetch customers.";
+            }
+        };
+
+        fetchcustomers();
+
+        const logout = () => {
+            if (confirm("Are you sure you want to logout?")) {
+                sessionStorage.setItem("access_token", "")
+                window.location.href = "index.html";
+            }
+        }
+
+        const returnBook = async (loan_id) => {
+            if (confirm('Return this book?')) {
+
+                    if (!token) {
+                    msg2.innerHTML = 'No token found, please login again';
+                    return;
+                    }
+                try {
+                    const response = await axios.delete(`${MY_SERVER}/return_book/${loan_id}`, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + token
+                        }
+                    });
+                    {
+                        ;
+                        {
+
+                            fetchcustomers();
+                        }
+                    }
+                } catch (error) {
+                    console.error("Error returning book:", error);
+                    document.querySelector("#msg2").textContent = "Error returning book: " + error.response.data.message;
+                }
+            }
+        };
+
+        window.onload = function () {
+            const myname = sessionStorage.getItem("myname");
+            if (myname) {
+                document.getElementById('welcomemsg').textContent = `Welcome ${myname}!`;
+            }
+        }
+    </script>

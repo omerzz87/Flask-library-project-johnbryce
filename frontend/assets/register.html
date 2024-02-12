@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+    
+    <div class="regcontainer">
+    <h2>Please fill in the credentials</h2>
+    Username<input id="username"><br>
+    Password<input id="password" type="password"><br>
+    Confirm password<input id="cpassword" type="password"><br>
+    Role type:
+    <br>
+    <select id="role">
+        <option value="0" selected>Customer (can't add a book)</option>
+        <option value="1">Librarian (admin) </option>
+        
+    </select>
+    <br>
+    City<input id="city"><br>
+    Name<input id="name"><br>
+    Age<input id="age" type="number"><br>
+    <br>
+    <div class="buttons-container">
+    <button onclick="register()">Register</button>
+    <button onclick="window.location.href = 'index.html';" style="background-color: red;">Back</button>
+</div>
+    <h2 id="msg"></h2>
+<script>
+const MY_SERVER = 'http://127.0.0.1:5000';
+    const register = async () => {
+        const role = document.getElementById('role').value;
+        if (role === '1') {
+        const adminPassword = prompt('Please enter the secret admin password (its "admin"):');
+        if (adminPassword !== 'admin') {
+            alert('Incorrect admin password');
+            return;
+        }
+    }
+            try {
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                const cpassword = document.getElementById('cpassword').value;
+                const city = document.getElementById('city').value;
+                const name = document.getElementById('name').value;
+                const age = document.getElementById('age').value;
+        
+                if (password !== cpassword) {
+                    msg.innerHTML="Passwords do not match."
+                    return;
+                }
+                if (!username || !password || !role || !city || !name || !age) {
+                    msg.innerHTML="Please fill in all the fields."
+                    return;
+                }
+        
+                const userData = {
+                    username: username,
+                    password: password,
+                    role: role,
+                    city: city,
+                    name: name,
+                    age: age
+                };
+        
+                const config = {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                };
+        
+                const res = await axios.post(`${MY_SERVER}/register`, JSON.stringify(userData), config);
+                console.log(res.data);
+                window.location.href = 'index.html?msg=User signed up successfully! Please login to continue.';
+                
+            
+            } catch (error) {
+                msg.innerHTML=error.response.data.message;
+            }
+        };
+</script>
+    
+</div>
+</body>
+</html>

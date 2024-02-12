@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<nav class="navbar">
+    <div class="left-links">
+        <a href="LibraryDatabase.html">Library</a>
+        <a href="customers.html">Customers</a>
+    </div>
+    <div class="right-content">
+
+        <span id="welcomemsg"></span>
+        <button onclick="logout()" id="outbtn">Logout</button>
+    </div>
+</nav>
+
+
+
+<body>
+<div class="addBook"> 
+    <h1 class="libtitles">Library books</h1>
+    Book title<input id="title"><br>
+    Author<input id="author"><br>
+    Year published <input id="year_published" type="date"><br>
+    Book type: <br><select id="book_type">
+        <option value="1">Up to 10 days</option>
+        <option value="2">Up to 5 days</option>
+        <option value="3">Up to 2 days</option>
+    </select><br>
+    <button onclick="addBook()">Add a Book</button>
+
+    <h3 id="msg"></h3>
+</div>
+    <div id="bookList" style="margin-left: 20px;">
+        <h2 id="bookCount"></h2>
+                <div class="msg2place">
+                    <h3 id="msg2"></h3></div></div>
+        <table id="booksTable">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>Year Published</th>
+                    <th>Status/Available</th>
+                    <th>Lease time</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    
+
+    <script>
+        const MY_SERVER = "http://127.0.0.1:5000"
+
+        const customerId = sessionStorage.getItem('customer_id');
+        const leaseBook = async (bookId) => {
+        if (confirm("Lease this book?")){
+            try {
+                const response = await axios.post(`${MY_SERVER}/add_loan`, {
+                    cust_id: customerId,
+                    book_id: bookId
+                }, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+                msg2.innerHTML = "Book leased successfully";
+            } catch (error) {
+                msg2.innerHTML = "Error leasing book: " + error.response.data.message;
+              }
+         } };
+
+        const getDuration = (book_type) => {
+            switch (Number(book_type)) {
+                case 1:
+                    return 'Up to 10 days';
+                case 2:
+                    return 'Up to 5 days';
+                case 3:
+                    return 'Up to 2 days';
+                default:
+                    return '';
+            }
+        }
+
+        const token = sessionStorage.getItem('access_token')
+
+        const fetchBooks = async () => {
+            try {
+                const response = await axios.get(`${MY_SERVER}/getbooks`);
+                const books = response.data;
+                const tableBody = document.querySelector("#booksTable tbody");
+
+                tableBody.innerHTML = "";
+                books.forEach(book => {
+                    const duration = getDuration(book.type);
+                    const row = `
+                        <tr>
+                        <td>${book.title}</td>
+                        <td>${book.author}</td>
+                        <td>${book.year_published}</td>
+                        <td>${book.status}</td>
+                        <td>${duration}</td>
+                        <td colspan="2">
+                            <div class="buttons-container"> <button onclick="editBook(${book.id})">Edit</button>
+                            <button onclick="deleteBook(${book.id})">Remove</button>
+                            <button onclick="leaseBook(${book.id})">Lease</button>
+                            
+
+                            </div>
+                        </td>
+                        </tr>
+
+                        `;
+                    tableBody.innerHTML += row;
+                });
+                const bookCount = document.querySelector("#bookCount");
+                bookCount.textContent = `Books Available: ${books.length}`;
+            } catch (error) {
+                console.error("Failed to fetch books:", error);
+            }
+        };
+
+        fetchBooks();
+
+
+        const addBook = () => {
+
+            const title = document.getElementById('title').value;
+            const author = document.getElementById('author').value;
+            const year_published = document.getElementById('year_published').value;
+            const book_type = document.getElementById('book_type').value;
+            const msg = document.getElementById('msg');
+
+            const selectedDate = new Date(year_published);
+            const currentDate = new Date();
+            currentDate.setHours(0, 0, 0, 0);
+
+            if (!(title.trim().length >= 3) || !(author.trim().length >= 3)) {
+                msg.innerHTML = "Error: Title and author must each be at least 3 letters.";
+                return;
+            }
+
+            if (selectedDate >= currentDate || isNaN(selectedDate)) {
+                msg.innerHTML = "Error: Please enter a valid date that is at least earlier than today.";
+                return;
+            }
+
+            if (!token) {
+                msg.innerHTML = 'No token found, please login again';
+                return;
+            }
+
+            axios({
+                method: 'post',
+                url: `${MY_SERVER}/add_book`,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                data: {
+                    title: title,
+                    author: author,
+                    year_published: year_published,
+                    type: book_type
+                }
+
+            }).then(res => msg.innerHTML = "Book added successfully")
+                .catch(err => {
+                    msg.innerHTML = "Error adding book: " + err.response.data.message;
+                });
+
+        }
+        const editBook = (book_id) => {
+            window.location.href = `updatebook.html?book_id=${book_id}`;
+        }
+        const deleteBook = (book_id) => {
+            if (confirm("Are you sure you want to delete this book?")) {
+                if (!token) {
+                    msg2.innerHTML = 'No token found, please login again';
+                    return;
+                }
+                axios({
+                    method: 'delete',
+                    url: `${MY_SERVER}/delete_book/${book_id}`,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    }
+                })
+                    .then(response => {
+                        console.log(response);
+                        fetchBooks();
+                    })
+                    .catch(error => {
+                        msg2.innerHTML = "Failed to delete book: " + error.response.data.message;
+                    });
+            }
+        }
+
+
+        const logout = () => {
+            if (confirm("Are you sure you want to logout?")) {
+                sessionStorage.setItem("access_token", "")
+                window.location.href = "index.html";
+            }
+        }
+
+
+        window.onload = function () {
+            const myname = sessionStorage.getItem("myname");
+            if (myname) {
+                document.getElementById('welcomemsg').textContent = `Welcome ${myname}!`;
+            }
+        }
+
+    </script>
+
+</body>
+
+</html>

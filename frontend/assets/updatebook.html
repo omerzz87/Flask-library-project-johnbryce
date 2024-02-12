@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update a book</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <div class="updatebook">
+<h1 class="updtitle">Updating book</h1>
+Book title<input id="title"><br>
+Author<input id="author"><br>
+Year published <input id="year_published" type="date" ><br>
+Book type: <br><select id="book_type"> 
+    <option value="1">Up to 10 days(1)</option>
+    <option value="2">Up to 5 days(2)</option>
+    <option value="3">Up to 2 days(3)</option>
+</select><br>
+<div class="buttons-container">
+<button onclick="editBook()">Edit</button>
+<button onclick="window.location.href = 'LibraryDatabase.html';" style="background-color: red;">Cancel</button>
+</div>
+<div id="msg" style="font-size: 26px;"></div>
+</div>
+
+
+   </body>
+   <script>
+    const MY_SERVER = "http://127.0.0.1:5000";
+    document.addEventListener('DOMContentLoaded', () => {
+        const session = new URLSearchParams(window.location.search);
+        book_id = session.get('book_id');
+        const msg = document.getElementById('msg');
+
+        async function fetchAndDisplayBookDetails() {
+            try {
+                const response = await axios.get(`${MY_SERVER}/getbooks/${book_id}`);
+                if(response.data) {
+                    const { title, author, year_published, type } = response.data;
+                    document.getElementById('title').value = title;
+                    document.getElementById('author').value = author;
+                    document.getElementById('year_published').value = year_published;
+                    document.getElementById('book_type').value = type;
+                } else {
+                    msg.innerHTML = "Book not found";
+                }
+            } catch (error) {
+                console.error('Error fetching book details:', error);
+                msg.innerHTML = "Error fetching book details";
+            }
+        }
+
+        fetchAndDisplayBookDetails();
+    });
+    const editBook = async () => {
+        const title = document.getElementById('title').value;
+        const author = document.getElementById('author').value;
+        const year_published = document.getElementById('year_published').value;
+        const book_type = document.getElementById('book_type').value; 
+        const msg = document.getElementById('msg'); 
+        
+        const selectedDate = new Date(year_published);
+        const currentDate = new Date();
+        currentDate.setHours(0, 0, 0, 0);
+        
+        if (!(title.trim().length >= 3) || !(author.trim().length >= 3)) {
+            msg.innerHTML = "Error: Title and author must each be at least 3 letters.";
+            return;
+        }
+
+        if (selectedDate >= currentDate) {
+            msg.innerHTML = "Error: Please enter a valid date that is at least earlier than today.";
+            return;
+        }
+        const token = sessionStorage.getItem('access_token');
+        if (!token) {
+            msg.innerHTML ='No token found, please login again';
+            return;
+        }    
+        axios({
+        method: 'put',
+        url: `${MY_SERVER}/update_book/${book_id}`,
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token  
+        },
+        data: {
+            title: title,
+            author: author,
+            year_published: year_published,
+            type: book_type
+        }
+    })
+    .then(res => {
+        msg.innerHTML = "Book updated successfully";
+        window.location.href = 'LibraryDatabase.html';
+    })
+    .catch(err => {
+        msg.innerHTML = "Error updating book: " + err.response.data.message;
+    });
+    };
+</script>
+
+   
