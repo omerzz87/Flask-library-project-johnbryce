@@ -1,6 +1,22 @@
-## tasks
+# Simple Library Management System
 
-1. when user logs , check it's type and redirect to correct page,
-2. add user crud that have own books with return button, and lease button from the books available
-3. connect customer table and books table, and tell by what user name the book is leased by
-4. auto return date function
+## Overview
+A Flask and SQLite-based library management system with JWT authentication for managing books, customers, and loans.
+
+## Features
+- Book, Customer, and Loan Management
+- JWT Authentication for registration and login
+
+## Database Schema
+- **Books:** `Id` (PK), `Name`, `Author`, `Year Published`, `Type` (1/2/3)
+- **Customers:** `Id` (PK), `Name`, `City`, `Age`
+- **Loans:** `CustID`, `BookID`, `LoanDate`, `ReturnDate`
+
+## Setup
+1. Clone the repo and `cd` into it
+2. Install dependencies: `pip install -r requirements.txt`
+3. Create the virtual env
+4. Start the server
+
+
+
