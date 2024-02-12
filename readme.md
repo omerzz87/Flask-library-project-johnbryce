@@ -14,9 +14,9 @@ A Flask and SQLite-based library management system with JWT authentication for m
 
 ## Setup
 1. Clone the repo and `cd` into it
-2. Install dependencies: `pip install -r requirements.txt`
-3. Create the virtual env
+2. Create the virtual env
+3. Install dependencies: `pip install -r requirements.txt`
 4. Start the server
-
+5. Open live index.html
 
 

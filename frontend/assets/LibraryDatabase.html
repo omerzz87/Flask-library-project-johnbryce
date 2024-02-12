@@ -60,25 +60,29 @@
 
     <script>
         const MY_SERVER = "http://127.0.0.1:5000"
-
+        const token = sessionStorage.getItem('access_token')
         const customerId = sessionStorage.getItem('customer_id');
         const leaseBook = async (bookId) => {
-        if (confirm("Lease this book?")){
-            try {
-                const response = await axios.post(`${MY_SERVER}/add_loan`, {
-                    cust_id: customerId,
-                    book_id: bookId
-                }, {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + token
-                    }
-                });
-                msg2.innerHTML = "Book leased successfully";
-            } catch (error) {
-                msg2.innerHTML = "Error leasing book: " + error.response.data.message;
-              }
-         } };
+            if (!token) {
+            msg2.innerHTML = 'No token found, please login again';
+            return;
+            }
+            if (confirm("Lease this book?")){
+                try {
+                    const response = await axios.post(`${MY_SERVER}/add_loan`, {
+                        cust_id: customerId,
+                        book_id: bookId
+                    }, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + token
+                        }
+                    });
+                    msg2.innerHTML = "Book leased successfully";
+                } catch (error) {
+                    msg2.innerHTML = "Error leasing book: " + error.response.data.message;
+                }
+            } };
 
         const getDuration = (book_type) => {
             switch (Number(book_type)) {
@@ -93,14 +97,15 @@
             }
         }
 
-        const token = sessionStorage.getItem('access_token')
+        
 
-        const fetchBooks = async () => {
+            const fetchBooks = async () => {
+        
             try {
                 const response = await axios.get(`${MY_SERVER}/getbooks`);
                 const books = response.data;
                 const tableBody = document.querySelector("#booksTable tbody");
-
+                
                 tableBody.innerHTML = "";
                 books.forEach(book => {
                     const duration = getDuration(book.type);
